@@ -63,7 +63,8 @@ enum alienTypes {nodriza, superior, medio, inferior};
  ******************************************************************************************************************************************/
 alien_t* createListAlien(int aliensTotales, alien_t* listAlien);     //Crea la lista de los aliens.
 void removeAlienList(int aliensTotales, alien_t* listAlien);    //Elimina de heap la lista creada.
-
+alien_t* addAlien(alien_t * firstAlien, vector_t setPos, int setType, int setLives);
+alien_t * initAliens(int numAliens, int numRows, vector_t firstAlienPos);
 //void moveAlien (alien_t* alien, int direccion); //Se encarga de modificar la posicion de los aliens.
 /*******************************************************************************************************************************************
 *******************************************************************************************************************************************/
@@ -95,7 +96,6 @@ int aliensTotales;  //Indica con cuantos aliens comienza el juego
 int filasAliens; //Cantidad total de filas de aliens
 /*******************************************************************************************************************************************
 *******************************************************************************************************************************************/
-
 
 int main(void) {
     
@@ -173,6 +173,46 @@ alien_t* createListAlien(int aliensTotales, alien_t* listAlien){
     auxiliar->next = NULL;//Al ultimo elemento se le asigna NULL.
 
     return listAlien;
+}
+
+alien_t* addAlien(alien_t * firstAlien, vector_t setPos, int setType, int setLives){
+	alien_t * lastAlien = firstAlien;
+	if(firstAlien != NULL){
+		while(lastAlien -> next != NULL){
+			lastAlien = lastAlien -> next;
+		}
+	}
+	alien_t * newAlien = malloc(sizeof(alien_t));
+	if(newAlien == NULL){
+		printf( "hubo error pete");
+		return NULL; //error
+	}
+	lastAlien -> next = newAlien;
+	lastAlien -> pos = setPos;
+	lastAlien -> type = setType;
+	lastAlien -> lives = setLives;
+	if(firstAlien != NULL){
+		return newAlien;
+	}
+	else{
+		return firstAlien;
+	}
+}
+
+alien_t * initAliens(int numAliens, int numRows, vector_t firstAlienPos){
+	int row;
+	int col;
+	vector_t alienPos = firstAlienPos;
+	alien_t * alienList = NULL;
+	for(row = 0; row < numRows; row++){
+		for(col = 0; col < numAliens/numRows; col++){
+			alienList = addAlien(alienList, alienPos,row+1,numRows - row);
+			alienPos.x += TAM_ALIENS_X + ESP_ALIENS_X;
+		}
+		alienPos.y += TAM_ALIENS_Y + ESP_ALIENS_Y;
+		alienPos.x = firstAlienPos.x;
+	}
+	return alienList;
 }
 
 void removeAlienList(int aliensTotales, alien_t* listAlien){

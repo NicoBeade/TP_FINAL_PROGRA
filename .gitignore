@@ -1,0 +1,8 @@
+
+main.o
+main.exe
+COMPILAR main.c.bat
+ABRIR CMD.bat
+main.o
+Makefile
+a.exe
