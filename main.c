@@ -36,16 +36,14 @@ typedef struct ALIEN{//Cada uno de los aliens sera una estructura de este tipo. 
                                                                                                                                                             
  * 
  ******************************************************************************************************************************************/
-#define IZQUIERDA -1
+#define IZQUIERDA -1    //Constantes utilizadas para indicar la direccion en la que se deben mover los aliens.
 #define DERECHA 1
 #define ABAJO 1
 
-#define DIST_INICIAL_X 6
-#define DIST_INICIAL_Y 4
-#define ESP_ALIENS_X 1
-#define TAM_ALIENS_X 3
-#define ESP_ALIENS_Y 1
-#define TAM_ALIENS_Y 3
+#define ESP_ALIENS_X 1      //Espacio vacio entre los aliens en la coordenada X.
+#define TAM_ALIENS_X 3      //Tamano que ocupan los aliens en la coordenada X.
+#define ESP_ALIENS_Y 1      //Espacio vacio entre los aliens en la coordenada Y.
+#define TAM_ALIENS_Y 3      //Tamano que ocupan los aliens en la coordenada Y.
 
 enum alienTypes {nodriza, superior, medio, inferior};
 /*******************************************************************************************************************************************
@@ -61,10 +59,10 @@ enum alienTypes {nodriza, superior, medio, inferior};
                                                                         |_|                                                            
  * 
  ******************************************************************************************************************************************/
-alien_t* createListAlien(int aliensTotales, alien_t* listAlien);     //Crea la lista de los aliens.
+alien_t* addAlien(alien_t * firstAlien, vector_t setPos, int setType, int setLives);    //Agrega un alien a la lista.
+alien_t * initAliens(int numAliens, int numRows, vector_t firstAlienPos);   //Inicializa la lista completa de aliens usando addAlien.
 void removeAlienList(int aliensTotales, alien_t* listAlien);    //Elimina de heap la lista creada.
-alien_t* addAlien(alien_t * firstAlien, vector_t setPos, int setType, int setLives);
-alien_t * initAliens(int numAliens, int numRows, vector_t firstAlienPos);
+
 //void moveAlien (alien_t* alien, int direccion); //Se encarga de modificar la posicion de los aliens.
 /*******************************************************************************************************************************************
 *******************************************************************************************************************************************/
@@ -94,6 +92,8 @@ alien_t * initAliens(int numAliens, int numRows, vector_t firstAlienPos);
 int aliensTotales;  //Indica con cuantos aliens comienza el juego
 //int aliensRestantes;    //Indica cuantos aliens quedan en la partida
 int filasAliens; //Cantidad total de filas de aliens
+int distInicialX = 6;    //Distancia de los aliens respecto del borde izquierdo de la pantalla al iniciar un nivel.
+int distInicialY = 4;    //Distancia de los aliens respecto del borde superior de la pantalla al iniciar un nivel.
 /*******************************************************************************************************************************************
 *******************************************************************************************************************************************/
 
@@ -102,9 +102,22 @@ int main(void) {
     aliensTotales = 12;
     filasAliens = 4;
 
+    vector_t firstAlienPos = {distInicialX, distInicialY};
+
     alien_t* listAlien;
 
-    listAlien = createListAlien(aliensTotales, listAlien);
+    listAlien = initAliens(aliensTotales, filasAliens, firstAlienPos);
+
+//************************************* Esta seccion del codigo se usa para probar que funcionen las listas *****************************
+    int i = 1;
+    alien_t* prueba = listAlien;
+    do{
+        printf("Alien %d: x: %d ; y: %d ; tipo: %d ; vidas: %d\n", i, prueba -> pos.x, prueba -> pos.y, prueba -> type, prueba -> lives);
+        i++;
+        prueba = prueba -> next;
+    }
+    while(prueba != NULL);
+//****************************************************************************************************************************************
 
     removeAlienList(aliensTotales, listAlien);
 
@@ -112,105 +125,52 @@ int main(void) {
 }
 
 
-alien_t* createListAlien(int aliensTotales, alien_t* listAlien){
-/* Esta funcion se encarga de crear la lista de los aliens. Recibe como parametros la cantidad de aliens totales y el puntero al que se desea que
-    se devuelva el primer elemento de la lista.
-*/
-    int i;
-    int despX = DIST_INICIAL_X;
-    int despY = DIST_INICIAL_Y;   //Se utilizan para desplazar en x e y al crear los aliens.
-    alien_t* auxiliar;
-    int colAliens = aliensTotales / filasAliens;    //Cantidad de aliens por fila
-
-    auxiliar = listAlien;
-
-    for(i = 0 ; i < aliensTotales ; i++){//Se crea la lista
-        auxiliar = malloc(sizeof(alien_t));
-
-        if(auxiliar == NULL){
-            printf("No se ha podido ampliar la lista\n");
-        }
-
-        auxiliar->pos.x = despX;//Posicion del alien
-        auxiliar->pos.y = despY;
-        
-        switch(despY){//Tipo de alien y cantidad de vidas
-            case DIST_INICIAL_Y://Si esta en la primera fila de aliens es de tipo superior y tiene 2 vidas
-                auxiliar->type = superior;
-                auxiliar->lives = 2;
-                break;
-            case DIST_INICIAL_Y + ESP_ALIENS_Y + TAM_ALIENS_Y://Si esta en la segunda o tercera fila es de tipo medio con una vida
-                auxiliar->type = medio;
-                auxiliar->lives = 1;
-                break;
-            case DIST_INICIAL_Y + 2*ESP_ALIENS_Y + 2*TAM_ALIENS_Y:
-                auxiliar->type = medio;
-                auxiliar->lives = 1;
-                break;   
-            case DIST_INICIAL_Y + 3*ESP_ALIENS_Y + 3*TAM_ALIENS_Y://Si esta en la cuarta o quina fila es de tipo inferior con una vida
-                auxiliar->type = inferior;
-                auxiliar->lives = 1;
-                break;
-            case DIST_INICIAL_Y + 4*ESP_ALIENS_Y + 4*TAM_ALIENS_Y:
-                auxiliar->type = inferior;
-                auxiliar->lives = 1;
-                break;
-            default:
-                break;
-        }
-
-        auxiliar = auxiliar->next;//Siguiente elemento
-
-        if(despX == DIST_INICIAL_X + colAliens*ESP_ALIENS_X + colAliens*TAM_ALIENS_X){//SI ya es el ultimo de la fila
-            despX = DIST_INICIAL_X;//Regresa el desplazamiento en X al inicio
-            despY += ESP_ALIENS_X + TAM_ALIENS_Y;//E incrementa el desplazamiento en Y a la siguiente fila
-        }
-        else{//Sino nos movemos a la siguiente columna.
-            despX += ESP_ALIENS_X + TAM_ALIENS_X;
-        }
-    }
-
-    auxiliar->next = NULL;//Al ultimo elemento se le asigna NULL.
-
-    return listAlien;
-}
-
 alien_t* addAlien(alien_t * firstAlien, vector_t setPos, int setType, int setLives){
-	alien_t * lastAlien = firstAlien;
-	if(firstAlien != NULL){
+/* Esta funcion se encarga de agregar un nuevo alien a la lista, inicializando su posicion, tipo y cantidad de vidas.
+    Devuelve un puntero al primer elemento de la lista.
+*/	
+	alien_t * newAlien = malloc(sizeof(alien_t));//Agrega el nuevo alien
+
+	if(newAlien == NULL){//Si no se puede hacer el malloc indica error.
+		printf( "No se ha podido agregar el elemento a la lista.\n");
+		return NULL; //error
+	}
+
+    if(firstAlien != NULL){//Si no es el primero de la lista debe avanzar hasta el ultimo elemento.
+        alien_t * lastAlien = firstAlien;//Se almacena el puntero al primer elemento.
+
 		while(lastAlien -> next != NULL){
 			lastAlien = lastAlien -> next;
 		}
+        lastAlien -> next = newAlien;
 	}
-	alien_t * newAlien = malloc(sizeof(alien_t));
-	if(newAlien == NULL){
-		printf( "hubo error pete");
-		return NULL; //error
-	}
-	lastAlien -> next = newAlien;
-	lastAlien -> pos = setPos;
-	lastAlien -> type = setType;
-	lastAlien -> lives = setLives;
-	if(firstAlien != NULL){
-		return newAlien;
-	}
-	else{
-		return firstAlien;
-	}
+    else{//Si es el primero de la lista debemos devolver ese puntero.
+        firstAlien = newAlien;
+    }
+
+	newAlien -> pos = setPos;//Asigna los valores indicados en los distitntos campos del alien.
+	newAlien -> type = setType;
+	newAlien -> lives = setLives;
+    newAlien -> next = NULL;
+
+	return firstAlien;//Devuelve un puntero al primer elemento.
 }
 
 alien_t * initAliens(int numAliens, int numRows, vector_t firstAlienPos){
-	int row;
+/*Utiliza la funcion addAlien para crear la lista con todos los aliesn al empezar un nivel. Devuelve un puntero al primer elemento de la lista.
+    Recibe como parametros: el numero total de aliens, el numero de filas de aliens y la posicion inicial del primer alien.
+*/
+	int row;//VAriables para desplazamiento
 	int col;
-	vector_t alienPos = firstAlienPos;
+	vector_t alienPos = firstAlienPos;//Se almacena la posicion del primer alien. Porque la coordenada x de esta variable sera utilizada mas adelante en la funcion.
 	alien_t * alienList = NULL;
-	for(row = 0; row < numRows; row++){
+	for(row = 0; row < numRows; row++){//Realiza la inicializacion
 		for(col = 0; col < numAliens/numRows; col++){
-			alienList = addAlien(alienList, alienPos,row+1,numRows - row);
-			alienPos.x += TAM_ALIENS_X + ESP_ALIENS_X;
+			alienList = addAlien(alienList, alienPos,row+1,numRows - row);//Agrega un alien a la lista.
+			alienPos.x += TAM_ALIENS_X + ESP_ALIENS_X;//Avanza la coordenada X al siguiente alien
 		}
-		alienPos.y += TAM_ALIENS_Y + ESP_ALIENS_Y;
-		alienPos.x = firstAlienPos.x;
+		alienPos.y += TAM_ALIENS_Y + ESP_ALIENS_Y; //Cuando llega a un borde lateral aumenta la coordenada Y.
+		alienPos.x = firstAlienPos.x;//Y reinicio la coordenada X.
 	}
 	return alienList;
 }
@@ -222,6 +182,9 @@ void removeAlienList(int aliensTotales, alien_t* listAlien){
         removeAlienList(aliensTotales - 1, listAlien->next);
     }
     free(listAlien);
+    #ifdef DEBUG
+    printf("Se elimino el alien: %d\n", aliensTotales);
+    #endif
 }
 
 /*
